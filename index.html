@@ -1,16 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Location Map</title>
+  <title>Facility Map with Sidebar</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    #map {
+    body {
+      margin: 0;
+      display: flex;
+    }
+    #sidebar {
+      width: 300px;
+      background: #f8f9fa;
+      padding: 15px;
+      overflow-y: auto;
       height: 100vh;
+      border-right: 1px solid #ccc;
+      font-family: Arial, sans-serif;
+    }
+    #sidebar h2 {
+      margin-top: 0;
+    }
+    #sidebar .category {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #555;
+    }
+    #sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    #sidebar ul li {
+      cursor: pointer;
+      padding: 6px 0;
+      color: #007bff;
+    }
+    #sidebar ul li:hover {
+      text-decoration: underline;
+    }
+    #map {
+      flex: 1;
     }
     .custom-popup {
       font-size: 14px;
@@ -22,58 +52,81 @@
   </style>
 </head>
 <body>
+
+<div id="sidebar">
+  <h2>Facility Locations</h2>
+
+  <div class="category">Main Offices / Maintenance Shops (Red)</div>
+  <ul>
+    <li onclick="flyToLocation('reedsville')">REEDSVILLE</li>
+    <li onclick="flyToLocation('cadiz')">CADIZ</li>
+    <li onclick="flyToLocation('wheeling')">WHEELING/VALLEY GROVE</li>
+    <li onclick="flyToLocation('stmarys')">ST MARYS</li>
+  </ul>
+
+  <div class="category">Disposal Wells / Parking (Blue)</div>
+  <ul>
+    <li onclick="flyToLocation('eastcanton')">EAST CANTON/LYONS SWD</li>
+    <li onclick="flyToLocation('lorecity')">LORE CITY/CLEARWATER 5 SWD</li>
+    <li onclick="flyToLocation('northlima')">NORTH LIMA/NORTH LIMA SWD</li>
+    <li onclick="flyToLocation('norwich')">NORWICH/GOFF SWD</li>
+  </ul>
+
+  <div class="category">Parking / Laydown Yards (Green)</div>
+  <ul>
+    <li onclick="flyToLocation('belpre')">BELPRE, OH</li>
+    <li onclick="flyToLocation('carrollton')">CARROLLTON, OH</li>
+    <li onclick="flyToLocation('somerset')">SOMERSET, PA</li>
+    <li onclick="flyToLocation('masontown')">MASONTOWN, PA</li>
+    <li onclick="flyToLocation('steubenville')">STEUBENVILLE, OH</li>
+  </ul>
+</div>
+
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   var map = L.map('map').setView([39.5, -80.8], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-  }).addTo(map);
+  const redIcon = new L.Icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png', iconSize: [36, 36], iconAnchor: [18, 36] });
+  const blueIcon = new L.Icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [28, 28], iconAnchor: [14, 28] });
+  const greenIcon = new L.Icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png', iconSize: [20, 20], iconAnchor: [10, 20] });
 
-  const redIcon = new L.Icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-  });
-
-  const blueIcon = new L.Icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-  });
-
-  const greenIcon = new L.Icon({
-    iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-    iconSize: [20, 20],
-    iconAnchor: [10, 20],
-  });
-
-  function addMarker(lat, lng, title, tag, icon) {
-    L.marker([lat, lng], { icon: icon })
+  const markers = {};
+  function addMarker(lat, lng, id, title, tag, icon) {
+    const marker = L.marker([lat, lng], { icon: icon })
       .addTo(map)
       .bindPopup(`<div class="custom-popup"><b>${title}</b><br/>(${tag})</div>`);
+    markers[id] = marker;
   }
 
-  // Red Pins
-  addMarker(39.5437, -79.8052, "REEDSVILLE", "Office/Maintenance Shop", redIcon);
-  addMarker(40.2781, -80.9965, "CADIZ", "Office/Maintenance Shop", redIcon);
-  addMarker(40.088825, -80.563978, "WHEELING/VALLEY GROVE", "Maintenance Shop/Small Office", redIcon);
-  addMarker(39.3795, -81.1822, "ST MARYS", "Office/Parking", redIcon);
+  function flyToLocation(id) {
+    const marker = markers[id];
+    if (marker) {
+      map.setView(marker.getLatLng(), 12);
+      marker.openPopup();
+    }
+  }
 
-  // Blue Pins
-  addMarker(40.7564, -81.3608, "EAST CANTON/LYONS SWD", "Disposal Well/Parking", blueIcon);
-  addMarker(39.9864, -81.4353, "LORE CITY/CLEARWATER 5 SWD", "Disposal Well/Parking", blueIcon);
-  addMarker(41.0437, -80.6269, "NORTH LIMA/NORTH LIMA SWD", "Disposal Well/Parking", blueIcon);
-  addMarker(39.9868, -81.7282, "NORWICH/GOFF SWD", "Disposal Well/Parking", blueIcon);
+  // Red
+  addMarker(39.5437, -79.8052, "reedsville", "REEDSVILLE", "Office/Maintenance Shop", redIcon);
+  addMarker(40.2781, -80.9965, "cadiz", "CADIZ", "Office/Maintenance Shop", redIcon);
+  addMarker(40.088825, -80.563978, "wheeling", "WHEELING/VALLEY GROVE", "Maintenance Shop/Small Office", redIcon);
+  addMarker(39.3795, -81.1822, "stmarys", "ST MARYS", "Office/Parking", redIcon);
 
-  // Green Pins
-  addMarker(39.2831, -81.5782, "BELPRE, OH", "Parking-Laydown Yard", greenIcon);
-  addMarker(40.5784, -81.0890, "CARROLLTON, OH", "Laydown Yard", greenIcon);
-  addMarker(39.9883, -79.0069, "SOMERSET, PA", "Parking", greenIcon);
-  addMarker(39.8456, -79.9063, "MASONTOWN, PA", "Parking", greenIcon);
-  addMarker(40.3698, -80.6332, "STEUBENVILLE, OH", "Parking", greenIcon);
+  // Blue
+  addMarker(40.7564, -81.3608, "eastcanton", "EAST CANTON/LYONS SWD", "Disposal Well/Parking", blueIcon);
+  addMarker(39.9864, -81.4353, "lorecity", "LORE CITY/CLEARWATER 5 SWD", "Disposal Well/Parking", blueIcon);
+  addMarker(41.0437, -80.6269, "northlima", "NORTH LIMA/NORTH LIMA SWD", "Disposal Well/Parking", blueIcon);
+  addMarker(39.9868, -81.7282, "norwich", "NORWICH/GOFF SWD", "Disposal Well/Parking", blueIcon);
+
+  // Green
+  addMarker(39.2831, -81.5782, "belpre", "BELPRE, OH", "Parking-Laydown Yard", greenIcon);
+  addMarker(40.5784, -81.0890, "carrollton", "CARROLLTON, OH", "Laydown Yard", greenIcon);
+  addMarker(39.9883, -79.0069, "somerset", "SOMERSET, PA", "Parking", greenIcon);
+  addMarker(39.8456, -79.9063, "masontown", "MASONTOWN, PA", "Parking", greenIcon);
+  addMarker(40.3698, -80.6332, "steubenville", "STEUBENVILLE, OH", "Parking", greenIcon);
 </script>
 </body>
 </html>
